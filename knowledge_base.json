@@ -1,0 +1,250 @@
+{
+  "tables": [
+    {
+      "tableName": "users",
+      "description": "Stores user account details",
+      "columns": [
+        "id",
+        "username",
+        "email",
+        "created_at"
+      ]
+    },
+    {
+      "tableName": "posts",
+      "description": "Stores posts created by users",
+      "columns": [
+        "id",
+        "user_id",
+        "title",
+        "content",
+        "created_at"
+      ]
+    },
+    {
+      "tableName": "comments",
+      "description": "Stores comments made on posts",
+      "columns": [
+        "id",
+        "post_id",
+        "user_id",
+        "content",
+        "created_at"
+      ]
+    },
+    {
+      "tableName": "likes",
+      "description": "Stores reactions (like/dislike) on posts by users",
+      "columns": [
+        "id",
+        "post_id",
+        "user_id",
+        "created_at",
+        "reaction_type"
+      ]
+    },
+    {
+      "tableName": "cities",
+      "description": "Stores city information",
+      "columns": [
+        "id",
+        "name",
+        "country",
+        "population"
+      ]
+    },
+    {
+      "tableName": "users_cities",
+      "description": "Associates users with cities",
+      "columns": [
+        "user_id",
+        "city_id",
+        "created_at"
+      ]
+    }
+  ],
+  "columns": [
+    {
+      "columnName": "id",
+      "tableName": "users",
+      "description": "Unique identifier for each user",
+      "PK": "users.id",
+      "FK": null
+    },
+    {
+      "columnName": "username",
+      "tableName": "users",
+      "description": "Username of the user",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "email",
+      "tableName": "users",
+      "description": "Email address of the user",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "created_at",
+      "tableName": "users",
+      "description": "Timestamp when the user was created",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "id",
+      "tableName": "posts",
+      "description": "Unique identifier for each post",
+      "PK": "posts.id",
+      "FK": null
+    },
+    {
+      "columnName": "user_id",
+      "tableName": "posts",
+      "description": "ID of the user who created the post from the users table",
+      "PK": null,
+      "FK": "posts.user_id = users.id"
+    },
+    {
+      "columnName": "title",
+      "tableName": "posts",
+      "description": "Title of the post",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "content",
+      "tableName": "posts",
+      "description": "Content of the post",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "created_at",
+      "tableName": "posts",
+      "description": "Timestamp when the post was created",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "id",
+      "tableName": "comments",
+      "description": "Unique identifier for each comment",
+      "PK": "comments.id",
+      "FK": null
+    },
+    {
+      "columnName": "post_id",
+      "tableName": "comments",
+      "description": "ID of the post to which the comment belongs from the posts table",
+      "PK": null,
+      "FK": "comments.post_id = posts.id"
+    },
+    {
+      "columnName": "user_id",
+      "tableName": "comments",
+      "description": "ID of the user who made the comment from the users table",
+      "PK": null,
+      "FK": "comments.user_id = users.id"
+    },
+    {
+      "columnName": "content",
+      "tableName": "comments",
+      "description": "Content of the comment",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "created_at",
+      "tableName": "comments",
+      "description": "Timestamp when the comment was created",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "id",
+      "tableName": "likes",
+      "description": "Unique identifier for each like",
+      "PK": "likes.id",
+      "FK": null
+    },
+    {
+      "columnName": "post_id",
+      "tableName": "likes",
+      "description": "ID of the post that was liked from the posts table",
+      "PK": null,
+      "FK": "likes.post_id = posts.id"
+    },
+    {
+      "columnName": "user_id",
+      "tableName": "likes",
+      "description": "ID of the user who liked the post from the users table",
+      "PK": null,
+      "FK": "likes.user_id = users.id"
+    },
+    {
+      "columnName": "created_at",
+      "tableName": "likes",
+      "description": "Timestamp when the like was created",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "reaction_type",
+      "tableName": "likes",
+      "description": "Type of reaction: -1 for dislike, 0 for none, 1 for like",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "id",
+      "tableName": "cities",
+      "description": "Unique identifier for each city",
+      "PK": "cities.id",
+      "FK": null
+    },
+    {
+      "columnName": "name",
+      "tableName": "cities",
+      "description": "Name of the city",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "country",
+      "tableName": "cities",
+      "description": "Country where the city is located",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "population",
+      "tableName": "cities",
+      "description": "Population of the city",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "user_id",
+      "tableName": "users_cities",
+      "description": "ID of the user from the users table",
+      "PK": null,
+      "FK": "users_cities.user_id = users.id"
+    },
+    {
+      "columnName": "city_id",
+      "tableName": "users_cities",
+      "description": "ID of the city from the cities table",
+      "PK": null,
+      "FK": "users_cities.city_id = cities.id"
+    },
+    {
+      "columnName": "created_at",
+      "tableName": "users_cities",
+      "description": "Timestamp when the user-city relationship was created",
+      "PK": null,
+      "FK": null
+    }
+  ]
+}
