@@ -4,14 +4,14 @@ import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
 
-def create_chroma_db():
+def create_chroma_db_connection():
     client = chromadb.PersistentClient(path="chroma_db/test_db")
     return client
 
 
 if __name__ == "__main__":
     # Create the ChromaDB instance
-    chromadb_conn = create_chroma_db()
+    chromadb_conn = create_chroma_db_connection()
     sql_knowledge_base = chromadb_conn.get_or_create_collection(
         name="sql_knowledge_base",
         configuration={
