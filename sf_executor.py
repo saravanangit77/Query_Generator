@@ -16,6 +16,4 @@ class SnowflakeQueryExecutor:
                 cursor.execute(f"USE SCHEMA {self.connection_parameters['schema']}")
                 cursor.execute(query)
                 return cursor.fetch_pandas_all()
-    def sample(self):
-        print("Executing sample query...")
-        return "Hello"
+
