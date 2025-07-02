@@ -1,62 +1,76 @@
-import os
 import chromadb
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import GoogleGenerativeAI
+from langchain_core.prompts import PromptTemplate
+from textwrap import dedent
+
+
+def extract_sql_from_code_block(result: str) -> str:
+    # Remove the backticks and language label
+    inner = result.strip().strip("`").split("\n")
+    if inner[0].strip().lower() == "sql":
+        return "\n".join(inner[1:])
+    return result.strip()
 
 
 class SQLQueryGenerator:
-    def __init__(self, chroma_path: str = "chroma_db/test_db", model: str = "gemini-1.5-flash"):
+    def __init__(self, chroma_path: str , model: str, api_key: str):
         self.chroma_client = self._connect_chroma(chroma_path)
-        self.llm = ChatGoogleGenerativeAI(
+        self.llm = GoogleGenerativeAI(
             model=model,
             temperature=0.9,
-            api_key=os.getenv("GEMINI_API_KEY_PERSONAL")
+            api_key=api_key
         )
+        self.prompt_template = PromptTemplate.from_template(
+            "{system_msg} \nPrev-Conversation: {conversation}\nContext: {context}\nQuestion: {question}\nTask: {task}")
 
     def _connect_chroma(self, path: str):
-        return chromadb.PersistentClient(path=path)
+        try:
+            client = chromadb.PersistentClient(path=path)
+            collections_list = client.list_collections()  # Ensures DB is not corrupted
+            print(collections_list)
+            if not collections_list:
+                raise RuntimeError("❌ No collections found in ChromaDB. Please run data_ingest.py to create them.")
+            print("✅ Connected to ChromaDB successfully.")
+            return client
+        except Exception as e:
+            raise RuntimeError(f"❌ Error connecting to ChromaDB: {e}")
 
     def _get_collection(self, name: str):
         try:
-            return self.chroma_client.get_collection(name)
+            return self.chroma_client.get_or_create_collection(name)
         except ValueError:
             raise Exception(f"❌ Collection '{name}' not found. Please run data_ingest.py to create it.")
 
-    @staticmethod
-    def _format_prompt(context: str, question: str, task: str) -> str:
-        return f"""
-        You are a helpful assistant. Only respond with the SQL query. If relevant documents are not found, respond with "No relevant documents found.".
-        Context: {context}
-        Question: {question}
-        Task: {task}
-        """
+    def create_prompt_template(self, context: str, question: str, task: str, conversation: str) -> str:
+        system_msg = dedent("""
+            You are a helpful assistant. Only respond with the SQL query_prompt.
+            If relevant documents are not found, respond with "No relevant documents found!".
+            Do not include code blocks or formatting.
+        """)
+        return self.prompt_template.format(system_msg=system_msg, context=context, question=question, task=task, conversation = conversation)
 
     def generate_sql_query(self, search_query: str, collection_name: str = "sql_knowledge_base",
-                           data_warehouse: str = "snowflake") -> str:
+                           data_warehouse: str = "snowflake", conversation=None) -> str:
+        if conversation is None:
+            conversation = {}
         collection = self._get_collection(collection_name)
-        result = collection.query(query_texts=search_query, n_results=10)
+        result = collection.query(query_texts=[search_query], n_results=10)
         documents = result.get("documents", [])
 
         if not documents or not documents[0]:
             return "No relevant documents found."
 
-        context = "\n".join(documents[0])
-        prompt = self._format_prompt(context=context, question=search_query,
-                                     task=f"Generate a SQL query to execute in {data_warehouse}")
-        response = self.llm.invoke(prompt)
-
-        if not response.content:
-            return "No relevant documents found."
-
+        context = "\n".join(doc for doc_list in documents for doc in doc_list)
+        prompt = self.create_prompt_template(context=context, question=search_query,
+                                             task=f"Generate a SQL query_prompt to execute in {data_warehouse}", conversation=conversation)
         try:
-            # Extract SQL from code block
-            sql_code_block = response.content.split("```")[1]
-            return sql_code_block.lstrip("sql").strip()
-        except IndexError:
-            return response.content.strip()
+            print("Prompt sent to LLM: \n", prompt,'\n\n')
+            response = self.llm.invoke(prompt)
+            if not response:
+                return "No SQL query generated."
+        except Exception as e:
+            return f"❌ LLM error: {e}"
+
+        return response.strip()
 
 
-if __name__ == "__main__":
-    generator = SQLQueryGenerator()
-    llm_search_query = "Who got more likes?"
-    sql_query = generator.generate_sql_query(llm_search_query)
-    print(f"Generated SQL Query:\n{sql_query}")
