@@ -1,0 +1,10 @@
+pyarrow<20.0.0
+redis
+snowflake-connector-python
+python-dotenv
+chromadb
+langchain-google-genai
+langchain-core
+sentence-transformers
+google-generativeai
+pandas
