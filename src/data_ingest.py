@@ -27,7 +27,7 @@ if __name__ == "__main__":
     )
 
     # split into chunks
-    with open("knowledge_base.json" , "r", encoding="utf-8") as f:
+    with open("../resources/knowledge_base.json" , "r", encoding="utf-8") as f:
         data = json.loads(f.read())
         tables = data["tables"]
         columns = data["columns"]

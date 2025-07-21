@@ -30,7 +30,7 @@ class SQLQueryGenerator:
         try:
             client = chromadb.PersistentClient(path=path)
             collections_list = client.list_collections()  # Ensures DB is not corrupted
-            print(collections_list)
+            # print(collections_list)
             if not collections_list:
                 raise RuntimeError("❌ No collections found in ChromaDB. Please run data_ingest.py to create them.")
             print("✅ Connected to ChromaDB successfully.")
@@ -69,11 +69,11 @@ class SQLQueryGenerator:
         )
         if not conversation:
             conversation = "No previous conversation found."
-        print(conversation)
+        # print(conversation)
         prompt = self.create_prompt_template(context=context, question=search_query,
                                              task=f"Generate a SQL query_prompt to execute in {data_warehouse}", conversation=conversation)
         try:
-            print("Prompt sent to LLM: \n", prompt,'\n\n')
+            # print("Prompt sent to LLM: \n", prompt,'\n\n')
             response = self.llm.invoke(prompt)
             if not response:
                 return "No SQL query generated."
