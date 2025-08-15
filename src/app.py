@@ -33,9 +33,36 @@ if __name__ == "__main__":
             print(user_query)
             sql_query = sql_generator.generate_sql_query(user_id,user_query, collection_name="sql_knowledge_base", data_warehouse="snowflake")
             print("Generated SQL Query: ", sql_query, "\n")
-            if sql_query.strip().lower() != "No relevant documents found!":
+            if sql_query.strip().lower() != "no relevant documents found!":
                 result = sql_executor.execute_query(sql_query)
-                print("Query Result: ", result, "\n")
+                # Print DataFrame in a more structured format
+                print("\n" + "="*80)
+                print(" "*30 + "📊 QUERY RESULTS 📊")
+                print("="*80 + "\n")
+
+                if hasattr(result, 'to_dict'):  # Check if result is a pandas DataFrame
+                    # Set display options for better formatting
+                    import pandas as pd
+                    from tabulate import tabulate
+
+                    pd.set_option('display.max_columns', None)
+                    pd.set_option('display.expand_frame_repr', False)
+                    pd.set_option('display.max_colwidth', 100)
+
+                    # Get column widths for better formatting
+                    col_names = result.columns.tolist()
+
+                    # Create a decorated table
+                    table = tabulate(result, headers=col_names, tablefmt="fancy_grid", showindex=False)
+                    print(table)
+
+                    # Print summary info
+                    print("\n" + "-"*80)
+                    print(f"📈 Total rows: {len(result)} | Total columns: {len(result.columns)}")
+                    print("-"*80)
+                else:
+                    print("🔍 Result:", result)
+                print("\n" + "="*80 + "\n")
         except Exception as e:
             print(f"Error executing query: {e}")
 

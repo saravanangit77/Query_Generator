@@ -39,7 +39,7 @@ class CacheService:
             qlist.append(entry)
 
             # Keep only the latest 5 entries
-            if len(qlist) > 5:
+            if len(qlist) > 7:
                 qlist = qlist[-5:]
 
             # Store back in Redis
@@ -90,10 +90,3 @@ class CacheService:
         except Exception as e:
             print(f"Error clearing cache: {e}")
             return False
-
-if __name__ == "__main__":
-    cache_service = CacheService()
-    # Example usage
-    cache_service.add_user_query("user123", "What is the sales data for Q1?", "SELECT * FROM sales WHERE quarter = 'Q1';")
-    queries = cache_service.get_user_queries("user123")
-    print(queries)  # Should print the list of queries for user123
