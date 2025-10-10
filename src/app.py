@@ -9,7 +9,13 @@ load_dotenv()
 
 
 if __name__ == "__main__":
-    sql_generator = SQLQueryGenerator("chroma_db/test_db", "gemini-1.5-flash", os.environ['GOOGLE_API_KEY_PERSONAL'])
+    sql_generator = SQLQueryGenerator(
+        chroma_path="chroma_db/test_db",
+        azure_endpoint=os.environ['AZURE_OPENAI_ENDPOINT'],
+        api_key=os.environ['AZURE_OPENAI_API_KEY'],
+        api_version=os.environ.get('AZURE_OPENAI_API_VERSION', '2024-12-01-preview'),
+        model=os.environ.get('AZURE_OPENAI_DEPLOYMENT_NAME', 'gpt-4o')
+    )
     connection_parameters = {
         "account": os.environ["snowflake_account"],
         "user": os.environ["snowflake_user"],

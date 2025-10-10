@@ -1,5 +1,5 @@
 import chromadb
-from langchain_google_genai import GoogleGenerativeAI
+from langchain_openai import AzureChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from textwrap import dedent
 
@@ -15,12 +15,14 @@ def extract_sql_from_code_block(result: str) -> str:
 
 
 class SQLQueryGenerator:
-    def __init__(self, chroma_path: str , model: str, api_key: str):
+    def __init__(self, chroma_path: str, azure_endpoint: str, api_key: str, api_version: str = "2024-02-15-preview", model: str = "gpt-4"):
         self.chroma_client = self._connect_chroma(chroma_path)
-        self.llm = GoogleGenerativeAI(
-            model=model,
-            temperature=0.9,
-            api_key=api_key
+        self.llm = AzureChatOpenAI(
+            azure_endpoint=azure_endpoint,
+            api_key=api_key,
+            api_version=api_version,
+            azure_deployment=model,
+            temperature=0.4,
         )
         self.context_cache = CacheService(host='localhost', port=6379, db=0)
         self.prompt_template = PromptTemplate.from_template(
@@ -80,6 +82,6 @@ class SQLQueryGenerator:
         except Exception as e:
             return f"❌ LLM error: {e}"
 
-        sql_query = response.strip()
+        sql_query = extract_sql_from_code_block(response.content.strip())
         self.context_cache.add_user_query(key, search_query, sql_query)  # Store the query in cache
         return sql_query

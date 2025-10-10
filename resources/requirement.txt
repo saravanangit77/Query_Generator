@@ -3,8 +3,8 @@ redis
 snowflake-connector-python
 python-dotenv
 chromadb
-langchain-google-genai
+langchain-openai
 langchain-core
 sentence-transformers
-google-generativeai
 pandas
+tabulate
