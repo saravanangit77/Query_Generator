@@ -1,5 +1,6 @@
 import chromadb
 from langchain_google_genai import GoogleGenerativeAI
+from langchain_openai import AzureChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from textwrap import dedent
 
@@ -15,13 +16,31 @@ def extract_sql_from_code_block(result: str) -> str:
 
 
 class SQLQueryGenerator:
-    def __init__(self, chroma_path: str , model: str, api_key: str):
+    def __init__(self, chroma_path: str, model: str, api_key: str, model_provider: str = "google",
+                 azure_endpoint: str = None, azure_deployment: str = None, api_version: str = "2024-02-15-preview"):
         self.chroma_client = self._connect_chroma(chroma_path)
-        self.llm = GoogleGenerativeAI(
-            model=model,
-            temperature=0.9,
-            api_key=api_key
-        )
+        self.model_provider = model_provider.lower()
+        
+        # Initialize LLM based on provider
+        if self.model_provider == "azure":
+            if not azure_endpoint or not azure_deployment:
+                raise ValueError("Azure endpoint and deployment name are required for Azure OpenAI")
+            self.llm = AzureChatOpenAI(
+                azure_endpoint=azure_endpoint,
+                azure_deployment=azure_deployment,
+                api_version=api_version,
+                api_key=api_key,
+                temperature=0.9
+            )
+        elif self.model_provider == "google":
+            self.llm = GoogleGenerativeAI(
+                model=model,
+                temperature=0.9,
+                api_key=api_key
+            )
+        else:
+            raise ValueError(f"Unsupported model provider: {model_provider}. Supported providers: 'google', 'azure'")
+            
         self.context_cache = CacheService(host='localhost', port=6379, db=0)
         self.prompt_template = PromptTemplate.from_template(
             "{system_msg} \nPrev-Conversation: {conversation}\nContext: {context}\nQuestion: {question}\nTask: {task}")

@@ -3,13 +3,35 @@ import os
 from dotenv import load_dotenv
 
 from sf_executor import SnowflakeQueryExecutor
-from SQLQueryGenerator import SQLQueryGenerator
+from sql_query_generator import SQLQueryGenerator
 
 load_dotenv()
 
 
 if __name__ == "__main__":
-    sql_generator = SQLQueryGenerator("chroma_db/test_db", "gemini-1.5-flash", os.environ['GOOGLE_API_KEY_PERSONAL'])
+    # Choose your model provider: "google" or "azure"
+    model_provider = os.environ.get("MODEL_PROVIDER", "google").lower()
+    
+    if model_provider == "azure":
+        # Azure OpenAI configuration - using your .env variable names
+        sql_generator = SQLQueryGenerator(
+            chroma_path="chroma_db/test_db",
+            model="gpt-4",  # Not used for Azure, but required parameter
+            api_key=os.environ['AZURE_PASSWORD'],  # Your .env uses AZURE_PASSWORD
+            model_provider="azure",
+            azure_endpoint=os.environ['AZURE_USERNAME'],  # Your .env uses AZURE_USERNAME for endpoint
+            azure_deployment=os.environ.get('AZURE_DEPLOYMENT', 'gpt-4'),  # Default deployment name
+            api_version=os.environ.get('AZURE_OPENAI_API_VERSION', '2024-02-15-preview')
+        )
+    else:
+        # Google Gemini configuration (default)
+        sql_generator = SQLQueryGenerator(
+            chroma_path="chroma_db/test_db",
+            model="gemini-1.5-flash",
+            api_key=os.environ['GOOGLE_API_KEY_PERSONAL'],
+            model_provider="google"
+        )
+    
     connection_parameters = {
         "account": os.environ["snowflake_account"],
         "user": os.environ["snowflake_user"],
@@ -24,8 +46,8 @@ if __name__ == "__main__":
 
 
     user_id = input("Enter your user ID: ")
+    print("\nWelcome to the SQL Query Generator! Mr./Ms.", user_id)
     while True:
-        print("\nWelcome to the SQL Query Generator! Mr./Ms.", user_id)
         user_query = input("Enter your SQL query or type 'exit' to quit: ")
         if user_query.lower() == 'exit':
             break
