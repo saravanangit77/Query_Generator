@@ -48,16 +48,37 @@ class SQLQueryGenerator:
 
     def create_prompt_template(self, context: str, question: str, task: str, conversation: str) -> str:
         system_msg = dedent("""
-            You are a helpful assistant. Only respond with the SQL query_prompt.
+            You are a Snowflake SQL expert. Generate ONLY the SQL query that follows Snowflake syntax and constraints.
+            
+            CRITICAL SNOWFLAKE REQUIREMENTS:
+            - Use proper date functions: TO_DATE(), DATEADD(), DATEDIFF(), DATE_TRUNC()
+            - For epoch timestamps: TO_TIMESTAMP(epoch_column) or TO_TIMESTAMP_NTZ(epoch_column)
+            - For date strings: TO_DATE(date_string, 'YYYY-MM-DD') or appropriate format
+            - Use CURRENT_TIMESTAMP(), CURRENT_DATE() for current date/time
+            - Table/column names are case-sensitive in Snowflake
+            - Use proper schema.table_name format when needed
+            - For LIMIT: use TOP N or LIMIT N (both work in Snowflake)
+            - String comparison is case-sensitive unless using ILIKE
+            - Use VARCHAR instead of TEXT
+            - Use OBJECT_CONSTRUCT() for JSON operations
+            - Handle NULL values properly with COALESCE() or IS NULL/IS NOT NULL
+            
+            DATE FORMAT EXAMPLES:
+            - Last month: WHERE created_date >= DATEADD(month, -1, CURRENT_DATE())
+            - This week: WHERE created_date >= DATE_TRUNC('week', CURRENT_DATE())
+            - Convert epoch: TO_TIMESTAMP(epoch_field)
+            - Date range: BETWEEN TO_DATE('2024-01-01', 'YYYY-MM-DD') AND CURRENT_DATE()
+            
             If relevant documents are not found, respond with "No relevant documents found!".
-            Do not include code blocks or formatting.
+            Do not include code blocks, backticks, or markdown formatting.
+            Return ONLY the executable SQL query.
         """)
         return self.prompt_template.format(system_msg=system_msg, context=context, question=question, task=task, conversation = conversation)
 
     def generate_sql_query(self, key, search_query: str, collection_name: str = "sql_knowledge_base",
                            data_warehouse: str = "snowflake") -> str:
         collection = self._get_collection(collection_name)
-        result = collection.query(query_texts=[search_query], n_results=10)
+        result = collection.query(query_texts=[search_query], n_results=25)
         documents = result.get("documents", [])
 
         if not documents or not documents[0]:
@@ -66,12 +87,13 @@ class SQLQueryGenerator:
         context = "\n".join(doc for doc_list in documents for doc in doc_list)
         # get from cache_service.py
         conversation_list = self.context_cache.get_user_queries(key)
+        print(f"📝 Retrieved {len(conversation_list)} previous conversations for user: {key}")
         conversation = "\n".join(
             f"User: {entry['user']} | LLM: {entry['llm_response']}" for entry in conversation_list
         )
         if not conversation:
             conversation = "No previous conversation found."
-        # print(conversation)
+        # print(f"🗣️ Conversation context: {conversation[:200]}..." if len(conversation) > 200 else f"🗣️ Conversation context: {conversation}")
         prompt = self.create_prompt_template(context=context, question=search_query,
                                              task=f"Generate a SQL query_prompt to execute in {data_warehouse}", conversation=conversation)
         try:

@@ -1,250 +1,697 @@
 {
+  "database": "TRIMBLE_CONNECT_STAGE",
+  "schema": "ADMIN_SCHEMA",
+  "description": "Trimble Connect platform database schema with tables and views for project management, file storage, user management, and entitlements",
   "tables": [
     {
-      "tableName": "users",
-      "description": "Stores user account details",
-      "columns": [
-        "id",
-        "username",
-        "email",
-        "created_at"
-      ]
+      "tableName": "activity",
+      "description": "Stores user activity records within projects",
+      "columns": ["activity_id", "user_id", "project_id", "scope", "action", "activity_created_on", "status", "source_region"]
     },
     {
-      "tableName": "posts",
-      "description": "Stores posts created by users",
-      "columns": [
-        "id",
-        "user_id",
-        "title",
-        "content",
-        "created_at"
-      ]
+      "tableName": "project",
+      "description": "Core project information and metadata",
+      "columns": ["project_id", "name", "root_id", "has_image", "sync_setting", "is_deleted", "deleted_by", "project_deleted_on", "created_by", "project_created_on", "modified_by", "project_modified_on", "is_project_invite_restricted", "source_region"]
     },
     {
-      "tableName": "comments",
-      "description": "Stores comments made on posts",
-      "columns": [
-        "id",
-        "post_id",
-        "user_id",
-        "content",
-        "created_at"
-      ]
+      "tableName": "activity_log",
+      "description": "Detailed logging of activities performed on objects",
+      "columns": ["activity_log_id", "activity_id", "object_id", "object_type_id", "action", "trigger_by", "activity_log_created_on", "source_region"]
     },
     {
-      "tableName": "likes",
-      "description": "Stores reactions (like/dislike) on posts by users",
-      "columns": [
-        "id",
-        "post_id",
-        "user_id",
-        "created_at",
-        "reaction_type"
-      ]
+      "tableName": "comment",
+      "description": "Comments made on objects (files, todos, etc.) with attachment support",
+      "columns": ["comment_id", "object_id", "object_type_id", "created_by", "modified_by", "deleted_by", "is_deleted", "comment_created_on", "comment_modified_on", "storage_object_id", "attachment_count", "source_region"]
     },
     {
-      "tableName": "cities",
-      "description": "Stores city information",
-      "columns": [
-        "id",
-        "name",
-        "country",
-        "population"
-      ]
+      "tableName": "storage_object",
+      "description": "Files and folders stored in projects with version control",
+      "columns": ["storage_object_id", "orig_storage_object_id", "content_id", "revision", "type", "name", "project_id", "created_by", "modified_by", "size_in_bytes", "storage_object_created_on", "storage_object_modified_on", "flag", "tds_fs_id", "source_region"]
     },
     {
-      "tableName": "users_cities",
-      "description": "Associates users with cities",
-      "columns": [
-        "user_id",
-        "city_id",
-        "created_at"
-      ]
+      "tableName": "storage_object_properties",
+      "description": "Extended properties for storage objects including CAD metadata",
+      "columns": ["storage_object_id", "header", "thumb_status_updated", "file_name", "header_timestamp", "model_author", "modeling_software", "modeling_software_version", "modeling_database_version", "source_region"]
+    },
+    {
+      "tableName": "storage_object_status",
+      "description": "Processing status for storage objects (thumbnail, conversion, etc.)",
+      "columns": ["storage_object_id", "status_type", "status", "progress", "execution_id", "modified", "source_region"]
+    },
+    {
+      "tableName": "user",
+      "description": "User accounts with Trimble ID integration",
+      "columns": ["user_id", "tid_uuid", "status", "type", "trn", "has_image", "user_created_on", "user_modified_on"]
+    },
+    {
+      "tableName": "user_group",
+      "description": "User groups within projects for permission management",
+      "columns": ["user_group_id", "created_by", "modified_by", "company_id", "project_id", "is_deleted", "deleted_by", "user_group_created_on", "user_group_modified_on", "source_region"]
+    },
+    {
+      "tableName": "company",
+      "description": "Company information for enterprise accounts",
+      "columns": ["company_id", "company_name", "company_abbreviation", "company_website", "has_image", "created_by", "created", "modified", "modified_by"]
+    },
+    {
+      "tableName": "company_user_mapping",
+      "description": "Associates users with companies and their roles",
+      "columns": ["company_id", "user_id", "role", "created_by", "created_on", "modified_by", "modified_on", "company_user_mapping_archive_id"]
+    },
+    {
+      "tableName": "accounts",
+      "description": "Account information for billing and entitlements",
+      "columns": ["account_id", "account_name", "account_type", "account_source", "modified_on"]
+    },
+    {
+      "tableName": "user_account_mapping",
+      "description": "Maps users to accounts with roles and status",
+      "columns": ["user_id", "account_id", "role", "created_on", "modified_on", "status"]
+    },
+    {
+      "tableName": "entitlements",
+      "description": "Product entitlements and licenses for accounts",
+      "columns": ["entitlement_id", "ecom_source", "entitlement_type", "sku", "owner_id", "ent_created_on", "ent_expiry_on", "ent_modified_on"]
+    },
+    {
+      "tableName": "entitlement_accounts",
+      "description": "Links entitlements to specific accounts",
+      "columns": ["id", "entitlement_id", "account_id", "account_type", "is_primary", "ent_account_modified_on"]
+    },
+    {
+      "tableName": "entitlements_feature_usage",
+      "description": "Feature usage limits and consumption for entitlements",
+      "columns": ["entitlement_id", "feature_type_id", "max_limit", "usage_limit", "ent_feature_usage_modified_on"]
+    },
+    {
+      "tableName": "feature_type",
+      "description": "Defines available features and their default values",
+      "columns": ["id", "external_feature_code", "feature_type", "default_value", "feature_type_created_on", "feature_type_modified_on", "type"]
+    },
+    {
+      "tableName": "sku_feature_mapping",
+      "description": "Maps SKUs to features with maximum values",
+      "columns": ["sku", "feature_type_id", "max_value", "sku_feature_mapping_created_on", "sku_feature_mapping_modified_on"]
+    },
+    {
+      "tableName": "skus",
+      "description": "Product SKUs from different sources (ECOM, etc.)",
+      "columns": ["sku", "source", "name", "type", "modified_on"]
+    },
+    {
+      "tableName": "subscriptions_usage",
+      "description": "Tracks feature usage across subscriptions and projects",
+      "columns": ["id", "entitlement_id", "subscription_usage_log_id", "project_id", "account_id", "region", "feature_type_id", "feature_usage", "sub_usage_created_on", "sub_usage_modified_on"]
+    },
+    {
+      "tableName": "user_activations",
+      "description": "User activation records for entitlements",
+      "columns": ["user_id", "activation_id", "entitlement_id", "type", "user_activation_assigned_on", "user_activation_created_on", "user_activation_expiry_on", "user_activation_modified_on", "status"]
+    },
+    {
+      "tableName": "user_activations_free",
+      "description": "Free tier user activations",
+      "columns": ["user_id", "activation_id", "entitlement_id", "type", "user_activations_free_assigned_on", "user_activations_free_created_on", "user_activations_free_expiry_on", "user_activations_free_modified_on", "status"]
+    },
+    {
+      "tableName": "tag",
+      "description": "Tags/labels that can be applied to objects",
+      "columns": ["tag_id", "project_id", "created_by", "tag_created_on", "modified_by", "tag_modified_on", "is_deleted", "deleted_by", "deleted_on", "source_region"]
+    },
+    {
+      "tableName": "todo",
+      "description": "Todo items/tasks with due dates and completion tracking",
+      "columns": ["todo_id", "type", "todo_start_date", "todo_due_date", "status_label_id", "priority_label_id", "project_id", "storage_object_id", "is_milestone", "percent_complete", "created_by", "is_deleted", "deleted_by", "modified_by", "todo_created_on", "todo_modified_on", "source_region"]
+    },
+    {
+      "tableName": "issue",
+      "description": "Issues/topics created in projects with BCF support (NoSQL structure)",
+      "columns": ["pk", "sk", "projectid", "fileid", "contextid", "serverassignedid", "title", "description", "createdby", "updatedby", "createdat", "updatedat", "deleted", "marker", "referencelinks", "percentage_complete", "priority", "stage", "status", "type", "id", "source_region"]
+    },
+    {
+      "tableName": "session",
+      "description": "User session tracking for authentication",
+      "columns": ["session_id", "user_id", "remote_ip", "user_agent", "session_created_on", "source_region"]
+    },
+    {
+      "tableName": "app_session_uuid",
+      "description": "Application session tracking with UUID-based identification",
+      "columns": ["session_uuid", "user_id", "created", "session_type", "last_accessed", "tid_uuid", "remote_ip", "user_agent"]
+    },
+    {
+      "tableName": "permission",
+      "description": "Permission definitions for different object types and operations",
+      "columns": ["permission_id", "object_type_id", "operation", "weight", "permission_created_on", "source_region"]
+    },
+    {
+      "tableName": "role",
+      "description": "Role definitions with scope and permissions",
+      "columns": ["role_id", "role_name", "scope_entity_id", "scope_entity_type", "is_system", "role_type", "activity_id", "orig_role_id", "role_created_by", "role_created_on", "source_region"]
+    },
+    {
+      "tableName": "actor_permission_archive",
+      "description": "Historical record of permissions granted to actors (users/groups)",
+      "columns": ["actor_permission_archive_id", "actor_id", "actor_type", "object_id", "object_type_id", "permission_or_role_id", "is_role", "actor_permission_archive_created_on", "source_region"]
+    },
+    {
+      "tableName": "revision_log",
+      "description": "Version control history for storage objects",
+      "columns": ["revision_log_id", "activity_id", "old_storage_object_id", "new_storage_object_id", "action", "revision_log_created_on", "source_region"]
+    },
+    {
+      "tableName": "email",
+      "description": "Email notification types and templates",
+      "columns": ["email_id", "type", "email_created_on", "source_region"]
+    },
+    {
+      "tableName": "compliance_user",
+      "description": "User compliance status for regulatory requirements",
+      "columns": ["user_id", "uuid", "compliance_req", "compliance_status", "compliance_user_created_on", "compliance_user_modified_on"]
+    },
+    {
+      "tableName": "system_sku",
+      "description": "System-level SKUs for internal operations",
+      "columns": ["sku", "type", "account_id", "account_name", "system_sku_created_on", "system_sku_modified_on"]
+    },
+    {
+      "tableName": "trial_sku",
+      "description": "Trial SKUs for evaluation purposes",
+      "columns": ["sku", "trial_sku_created_on"]
+    },
+    {
+      "tableName": "project_id_mapping",
+      "description": "Maps numeric project IDs to VID (visual IDs)",
+      "columns": ["project_numeric_id", "project_vid", "source_region"]
+    },
+    {
+      "tableName": "account_user_mapping",
+      "description": "Maps users to accounts with project count tracking",
+      "columns": ["account_id", "user_id", "active_projects_count", "modified_on"]
+    },
+    {
+      "tableName": "account_user_mapping_kitchen",
+      "description": "Kitchen sink table for account user mapping (data processing/staging)",
+      "columns": ["account_id", "user_id", "active_projects_count", "modified_on"]
+    },
+    {
+      "tableName": "account_user_project_mapping",
+      "description": "Three-way mapping between accounts, users, and projects",
+      "columns": ["user_id", "project_id", "account_id", "account_modified_on", "modified_on", "region", "status"]
+    },
+    {
+      "tableName": "account_user_project_mapping_kitchen",
+      "description": "Kitchen sink table for account user project mapping (data processing/staging)",
+      "columns": ["user_id", "project_id", "account_id", "account_modified_on", "modified_on", "region", "status"]
+    }
+  ],
+  "views": [
+    {
+      "viewName": "activity_view",
+      "description": "Simplified view of user activities with date formatting",
+      "baseTable": "activity",
+      "columns": ["activity_id", "user_id", "project_id", "scope", "action", "status", "source_region", "activity_created_on"]
+    },
+    {
+      "viewName": "project_view",
+      "description": "Project information view with formatted dates",
+      "baseTable": "project",
+      "columns": ["project_id", "root_id", "has_image", "sync_setting", "is_deleted", "deleted_by", "created_by", "modified_by", "is_project_invite_restricted", "source_region", "project_deleted_on", "project_created_on", "project_modified_on"]
+    },
+    {
+      "viewName": "storage_object_view",
+      "description": "File and folder view with computed extension field",
+      "baseTable": "storage_object",
+      "columns": ["storage_object_id", "orig_storage_object_id", "content_id", "revision", "type", "name", "project_id", "created_by", "modified_by", "size_in_bytes", "flag", "tds_fs_id", "source_region", "extension", "storage_object_created_on", "storage_object_modified_on"]
+    },
+    {
+      "viewName": "user_view",
+      "description": "User information view with formatted dates",
+      "baseTable": "user",
+      "columns": ["user_id", "tid_uuid", "status", "type", "trn", "has_image", "source_region", "user_created_on", "user_modified_on"]
+    },
+    {
+      "viewName": "todo_view",
+      "description": "Todo items with formatted dates and due date tracking",
+      "baseTable": "todo",
+      "columns": ["todo_id", "type", "todo_due_date", "status_label_id", "priority_label_id", "project_id", "storage_object_id", "is_milestone", "percent_complete", "created_by", "is_deleted", "deleted_by", "modified_by", "source_region", "todo_start_date", "todo_created_on", "todo_modified_on"]
+    },
+    {
+      "viewName": "entitlements_view",
+      "description": "Entitlements and licenses view with owner UUID",
+      "baseTable": "entitlements",
+      "columns": ["entitlement_id", "ecom_source", "entitlement_type", "sku", "owner_uuid", "ent_created_on", "ent_expiry_on", "ent_modified_on"]
+    },
+    {
+      "viewName": "user_activations_view",
+      "description": "User activations with UUID-based user identification",
+      "baseTable": "user_activations",
+      "columns": ["user_uuid", "activation_id", "entitlement_id", "type", "status", "user_activation_assigned_on", "user_activation_created_on", "user_activation_expiry_on", "user_activation_modified_on"]
+    },
+    {
+      "viewName": "subscriptions_usage_view",
+      "description": "Feature usage tracking across subscriptions with project VID",
+      "baseTable": "subscriptions_usage",
+      "columns": ["id", "entitlement_id", "subscription_usage_log_id", "project_vid", "account_id", "region", "feature_type_id", "feature_usage", "sub_usage_created_on", "sub_usage_modified_on"]
+    },
+    {
+      "viewName": "project_id_mapping_view",
+      "description": "Mapping between numeric project IDs and visual IDs",
+      "baseTable": "project_id_mapping",
+      "columns": ["project_id", "project_vid"]
     }
   ],
   "columns": [
     {
-      "columnName": "id",
-      "tableName": "users",
-      "description": "Unique identifier for each user",
-      "PK": "users.id",
-      "FK": null
-    },
-    {
-      "columnName": "username",
-      "tableName": "users",
-      "description": "Username of the user",
-      "PK": null,
-      "FK": null
-    },
-    {
-      "columnName": "email",
-      "tableName": "users",
-      "description": "Email address of the user",
-      "PK": null,
-      "FK": null
-    },
-    {
-      "columnName": "created_at",
-      "tableName": "users",
-      "description": "Timestamp when the user was created",
-      "PK": null,
-      "FK": null
-    },
-    {
-      "columnName": "id",
-      "tableName": "posts",
-      "description": "Unique identifier for each post",
-      "PK": "posts.id",
+      "columnName": "activity_id",
+      "tableName": "activity",
+      "description": "Unique identifier for each activity record",
+      "dataType": "bigint",
+      "PK": "activity.activity_id",
       "FK": null
     },
     {
       "columnName": "user_id",
-      "tableName": "posts",
-      "description": "ID of the user who created the post from the users table",
+      "tableName": "activity",
+      "description": "ID of the user who performed the activity",
+      "dataType": "bigint",
       "PK": null,
-      "FK": "posts.user_id = users.id"
+      "FK": "activity.user_id = user.user_id"
     },
     {
-      "columnName": "title",
-      "tableName": "posts",
-      "description": "Title of the post",
+      "columnName": "project_id",
+      "tableName": "activity",
+      "description": "ID of the project where activity occurred",
+      "dataType": "bigint",
       "PK": null,
-      "FK": null
+      "FK": "activity.project_id = project.project_id"
     },
     {
-      "columnName": "content",
-      "tableName": "posts",
-      "description": "Content of the post",
-      "PK": null,
-      "FK": null
-    },
-    {
-      "columnName": "created_at",
-      "tableName": "posts",
-      "description": "Timestamp when the post was created",
-      "PK": null,
-      "FK": null
-    },
-    {
-      "columnName": "id",
-      "tableName": "comments",
-      "description": "Unique identifier for each comment",
-      "PK": "comments.id",
-      "FK": null
-    },
-    {
-      "columnName": "post_id",
-      "tableName": "comments",
-      "description": "ID of the post to which the comment belongs from the posts table",
-      "PK": null,
-      "FK": "comments.post_id = posts.id"
-    },
-    {
-      "columnName": "user_id",
-      "tableName": "comments",
-      "description": "ID of the user who made the comment from the users table",
-      "PK": null,
-      "FK": "comments.user_id = users.id"
-    },
-    {
-      "columnName": "content",
-      "tableName": "comments",
-      "description": "Content of the comment",
-      "PK": null,
-      "FK": null
-    },
-    {
-      "columnName": "created_at",
-      "tableName": "comments",
-      "description": "Timestamp when the comment was created",
-      "PK": null,
-      "FK": null
-    },
-    {
-      "columnName": "id",
-      "tableName": "likes",
-      "description": "Unique identifier for each like",
-      "PK": "likes.id",
-      "FK": null
-    },
-    {
-      "columnName": "post_id",
-      "tableName": "likes",
-      "description": "ID of the post that was liked from the posts table",
-      "PK": null,
-      "FK": "likes.post_id = posts.id"
-    },
-    {
-      "columnName": "user_id",
-      "tableName": "likes",
-      "description": "ID of the user who liked the post from the users table",
-      "PK": null,
-      "FK": "likes.user_id = users.id"
-    },
-    {
-      "columnName": "created_at",
-      "tableName": "likes",
-      "description": "Timestamp when the like was created",
-      "PK": null,
-      "FK": null
-    },
-    {
-      "columnName": "reaction_type",
-      "tableName": "likes",
-      "description": "Type of reaction: -1 for dislike, 0 for none, 1 for like",
-      "PK": null,
-      "FK": null
-    },
-    {
-      "columnName": "id",
-      "tableName": "cities",
-      "description": "Unique identifier for each city",
-      "PK": "cities.id",
+      "columnName": "project_id",
+      "tableName": "project",
+      "description": "Unique identifier for each project",
+      "dataType": "bigint",
+      "PK": "project.project_id",
       "FK": null
     },
     {
       "columnName": "name",
-      "tableName": "cities",
-      "description": "Name of the city",
+      "tableName": "project",
+      "description": "Display name of the project",
+      "dataType": "varchar",
       "PK": null,
       "FK": null
     },
     {
-      "columnName": "country",
-      "tableName": "cities",
-      "description": "Country where the city is located",
+      "columnName": "storage_object_id",
+      "tableName": "storage_object",
+      "description": "Unique identifier for files and folders",
+      "dataType": "bigint",
+      "PK": "storage_object.storage_object_id",
+      "FK": null
+    },
+    {
+      "columnName": "project_id",
+      "tableName": "storage_object",
+      "description": "ID of the project containing this object",
+      "dataType": "bigint",
+      "PK": null,
+      "FK": "storage_object.project_id = project.project_id"
+    },
+    {
+      "columnName": "type",
+      "tableName": "storage_object",
+      "description": "Object type: FILE, FOLDER, etc.",
+      "dataType": "varchar",
       "PK": null,
       "FK": null
     },
     {
-      "columnName": "population",
-      "tableName": "cities",
-      "description": "Population of the city",
+      "columnName": "name",
+      "tableName": "storage_object",
+      "description": "Name of the file or folder",
+      "dataType": "varchar(256)",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "size_in_bytes",
+      "tableName": "storage_object",
+      "description": "Size of the file in bytes",
+      "dataType": "bigint",
       "PK": null,
       "FK": null
     },
     {
       "columnName": "user_id",
-      "tableName": "users_cities",
-      "description": "ID of the user from the users table",
-      "PK": null,
-      "FK": "users_cities.user_id = users.id"
+      "tableName": "user",
+      "description": "Unique identifier for each user account",
+      "dataType": "bigint",
+      "PK": "user.user_id",
+      "FK": null
     },
     {
-      "columnName": "city_id",
-      "tableName": "users_cities",
-      "description": "ID of the city from the cities table",
+      "columnName": "tid_uuid",
+      "tableName": "user",
+      "description": "Trimble ID UUID for user identification",
+      "dataType": "varchar(50)",
       "PK": null,
-      "FK": "users_cities.city_id = cities.id"
+      "FK": null,
+      "unique": true
     },
     {
-      "columnName": "created_at",
-      "tableName": "users_cities",
-      "description": "Timestamp when the user-city relationship was created",
+      "columnName": "todo_id",
+      "tableName": "todo",
+      "description": "Unique identifier for todo items",
+      "dataType": "bigint",
+      "PK": "todo.todo_id",
+      "FK": null
+    },
+    {
+      "columnName": "todo_due_date",
+      "tableName": "todo",
+      "description": "Due date for todo completion",
+      "dataType": "date",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "project_id",
+      "tableName": "todo",
+      "description": "ID of the project containing this todo",
+      "dataType": "bigint",
+      "PK": null,
+      "FK": "todo.project_id = project.project_id"
+    },
+    {
+      "columnName": "storage_object_id",
+      "tableName": "todo",
+      "description": "ID of the file/object this todo is attached to",
+      "dataType": "bigint",
+      "PK": null,
+      "FK": "todo.storage_object_id = storage_object.storage_object_id"
+    },
+    {
+      "columnName": "entitlement_id",
+      "tableName": "entitlements",
+      "description": "Unique identifier for product entitlements",
+      "dataType": "varchar(50)",
+      "PK": "entitlements.entitlement_id",
+      "FK": null
+    },
+    {
+      "columnName": "sku",
+      "tableName": "entitlements",
+      "description": "Product SKU associated with this entitlement",
+      "dataType": "varchar(100)",
+      "PK": null,
+      "FK": "entitlements.sku = skus.sku"
+    },
+    {
+      "columnName": "owner_id",
+      "tableName": "entitlements",
+      "description": "UUID of the entitlement owner",
+      "dataType": "varchar(50)",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "account_id",
+      "tableName": "accounts",
+      "description": "Unique identifier for billing accounts",
+      "dataType": "varchar(50)",
+      "PK": "accounts.account_id",
+      "FK": null
+    },
+    {
+      "columnName": "account_id",
+      "tableName": "entitlement_accounts",
+      "description": "Account ID linked to entitlement",
+      "dataType": "varchar(36)",
+      "PK": null,
+      "FK": "entitlement_accounts.account_id = accounts.account_id"
+    },
+    {
+      "columnName": "entitlement_id",
+      "tableName": "entitlement_accounts",
+      "description": "Entitlement ID being linked to account",
+      "dataType": "varchar(50)",
+      "PK": null,
+      "FK": "entitlement_accounts.entitlement_id = entitlements.entitlement_id"
+    },
+    {
+      "columnName": "feature_type_id",
+      "tableName": "feature_type",
+      "description": "Unique identifier for feature types",
+      "dataType": "bigint",
+      "PK": "feature_type.id",
+      "FK": null
+    },
+    {
+      "columnName": "external_feature_code",
+      "tableName": "feature_type",
+      "description": "External system feature code for integration",
+      "dataType": "varchar(50)",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "feature_type_id",
+      "tableName": "entitlements_feature_usage",
+      "description": "Feature type being tracked for usage",
+      "dataType": "bigint",
+      "PK": null,
+      "FK": "entitlements_feature_usage.feature_type_id = feature_type.id"
+    },
+    {
+      "columnName": "max_limit",
+      "tableName": "entitlements_feature_usage",
+      "description": "Maximum allowed usage for this feature",
+      "dataType": "bigint",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "usage_limit",
+      "tableName": "entitlements_feature_usage",
+      "description": "Current usage count for this feature",
+      "dataType": "bigint",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "pk",
+      "tableName": "issue",
+      "description": "Partition key for NoSQL issue storage (typically contains contextid)",
+      "dataType": "string",
+      "PK": "issue.pk",
+      "FK": null
+    },
+    {
+      "columnName": "sk",
+      "tableName": "issue",
+      "description": "Sort key for NoSQL issue storage (typically contains issue ID)",
+      "dataType": "string",
+      "PK": "issue.sk",
+      "FK": null
+    },
+    {
+      "columnName": "projectid",
+      "tableName": "issue",
+      "description": "Project identifier for the issue (VID format)",
+      "dataType": "string",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "contextid",
+      "tableName": "issue",
+      "description": "Context identifier in TRN format (trn:2:tc:region:projects:projectid)",
+      "dataType": "string",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "serverassignedid",
+      "tableName": "issue",
+      "description": "Human-readable issue identifier (e.g., ISSUE-123)",
+      "dataType": "string",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "title",
+      "tableName": "issue",
+      "description": "Issue title/summary",
+      "dataType": "string",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "description",
+      "tableName": "issue",
+      "description": "Detailed issue description",
+      "dataType": "string",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "priority",
+      "tableName": "issue",
+      "description": "Issue priority level (Low, Medium, High, Critical)",
+      "dataType": "string",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "status",
+      "tableName": "issue",
+      "description": "Current issue status (New, In Progress, Resolved, etc.)",
+      "dataType": "string",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "type",
+      "tableName": "issue",
+      "description": "Issue type (Issue, Request, Comment, etc.)",
+      "dataType": "string",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "createdby",
+      "tableName": "issue",
+      "description": "UUID of user who created the issue",
+      "dataType": "string",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "createdat",
+      "tableName": "issue",
+      "description": "Timestamp when issue was created",
+      "dataType": "timestamp_tz",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "marker",
+      "tableName": "issue",
+      "description": "3D marker/viewpoint data for issue location (JSON/variant)",
+      "dataType": "variant",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "referencelinks",
+      "tableName": "issue",
+      "description": "Array of reference URLs related to the issue",
+      "dataType": "array",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "source_region",
+      "tableName": "activity",
+      "description": "Geographic region where the data originated (us, eu, ap)",
+      "dataType": "varchar",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "source_region",
+      "tableName": "project",
+      "description": "Geographic region where the project data originated",
+      "dataType": "varchar",
+      "PK": null,
+      "FK": null
+    },
+    {
+      "columnName": "source_region",
+      "tableName": "storage_object",
+      "description": "Geographic region where the file data originated",
+      "dataType": "varchar",
       "PK": null,
       "FK": null
     }
-  ]
+  ],
+  "relationships": [
+    {
+      "relationship": "activity.user_id = user.user_id",
+      "description": "Links activities to the users who performed them"
+    },
+    {
+      "relationship": "activity.project_id = project.project_id",
+      "description": "Links activities to the projects they occurred in"
+    },
+    {
+      "relationship": "storage_object.project_id = project.project_id",
+      "description": "Links files/folders to their containing projects"
+    },
+    {
+      "relationship": "storage_object.created_by = user.user_id",
+      "description": "Links storage objects to the users who created them"
+    },
+    {
+      "relationship": "todo.project_id = project.project_id",
+      "description": "Links todos to their containing projects"
+    },
+    {
+      "relationship": "todo.storage_object_id = storage_object.storage_object_id",
+      "description": "Links todos to associated files/objects"
+    },
+    {
+      "relationship": "comment.object_id = storage_object.storage_object_id (when object_type_id = FILE_TYPE)",
+      "description": "Links comments to storage objects they reference"
+    },
+    {
+      "relationship": "entitlement_accounts.entitlement_id = entitlements.entitlement_id",
+      "description": "Links entitlements to their associated accounts"
+    },
+    {
+      "relationship": "entitlement_accounts.account_id = accounts.account_id",
+      "description": "Links entitlement-account mappings to account records"
+    },
+    {
+      "relationship": "entitlements_feature_usage.entitlement_id = entitlements.entitlement_id",
+      "description": "Links feature usage tracking to specific entitlements"
+    },
+    {
+      "relationship": "entitlements_feature_usage.feature_type_id = feature_type.id",
+      "description": "Links usage tracking to specific feature types"
+    },
+    {
+      "relationship": "user_activations.entitlement_id = entitlements.entitlement_id",
+      "description": "Links user activations to their entitlements"
+    },
+    {
+      "relationship": "project_id_mapping.project_numeric_id = project.project_id",
+      "description": "Maps numeric project IDs to their VID equivalents"
+    },
+    {
+      "relationship": "account_user_mapping.account_id = accounts.account_id",
+      "description": "Links users to accounts for billing purposes"
+    },
+    {
+      "relationship": "account_user_project_mapping.user_id = user_account_mapping.user_id",
+      "description": "Three-way relationship between accounts, users, and projects"
+    }
+  ],
+  "commonPatterns": {
+    "dateFormatting": "Views use substr(timestamp_field, 1, 10) to extract date portion from timestamps",
+    "softDelete": "Many tables use is_deleted flag with deleted_by and deleted_on fields for audit trail",
+    "auditFields": "Most tables include created_by, created_on, modified_by, modified_on for change tracking",
+    "sourceRegion": "All tables include source_region for multi-region data management",
+    "userIdentification": "Users can be identified by user_id (bigint) or tid_uuid (varchar UUID)",
+    "projectIdentification": "Projects can be identified by project_id (bigint) or project_vid (varchar)"
+  },
+  "usageHints": {
+    "fileQueries": "Use storage_object table/view for file operations, join with storage_object_properties for CAD metadata",
+    "userQueries": "Use user table/view, tid_uuid is the primary external identifier",
+    "projectQueries": "Use project table/view, consider is_deleted flag for active projects",
+    "activityQueries": "Use activity and activity_log tables for audit trails and user behavior analysis",
+    "entitlementQueries": "Use entitlements view joined with entitlement_accounts for licensing questions",
+    "issueQueries": "Use issue table for BCF/topic data - this is a NoSQL structure with variant/JSON fields",
+    "todoQueries": "Use todo table/view for task management, consider todo_due_date for deadline tracking"
+  }
 }

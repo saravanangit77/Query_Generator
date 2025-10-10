@@ -5,10 +5,18 @@ from typing import List, Dict
 class CacheService:
     def __init__(self, host='localhost', port=6379, db=0):
         try:
-            self.r = redis.Redis(host=host, port=port, db=db)
-            print(f"Connected to Redis server (version: {redis.__version__})")
+            self.r = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+            # Test the connection
+            self.r.ping()
+            server_info = self.r.info()
+            redis_version = server_info.get('redis_version', 'unknown')
+            print(f"✅ Connected to Redis server (version: {redis_version})")
+        except redis.ConnectionError as e:
+            print(f"❌ Failed to connect to Redis: {e}")
+            print("💡 Make sure Redis server is running: 'brew services start redis' (macOS)")
+            self.r = None
         except Exception as e:
-            print(f"Failed to connect to Redis: {e}")
+            print(f"❌ Redis connection error: {e}")
             self.r = None
 
     def add_user_query(self, user_id: str, user_qstn: str, sql_query: str):
@@ -31,7 +39,7 @@ class CacheService:
         try:
             data = self.r.get(key)
             if data:
-                qlist = json.loads(data.decode('utf-8'))
+                qlist = json.loads(data)  # decode_responses=True handles decoding
             else:
                 qlist = []
 
@@ -39,7 +47,7 @@ class CacheService:
             qlist.append(entry)
 
             # Keep only the latest 5 entries
-            if len(qlist) > 7:
+            if len(qlist) > 5:
                 qlist = qlist[-5:]
 
             # Store back in Redis
@@ -66,7 +74,7 @@ class CacheService:
         try:
             data = self.r.get(user_id)
             if data:
-                return json.loads(data.decode('utf-8'))
+                return json.loads(data)  # decode_responses=True handles decoding
             return []
         except Exception as e:
             print(f"Error retrieving from cache: {e}")

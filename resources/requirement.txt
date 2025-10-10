@@ -8,3 +8,4 @@ langchain-core
 sentence-transformers
 pandas
 tabulate
+streamlit

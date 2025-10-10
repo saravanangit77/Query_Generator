@@ -40,7 +40,11 @@ if __name__ == "__main__":
             sql_query = sql_generator.generate_sql_query(user_id,user_query, collection_name="sql_knowledge_base", data_warehouse="snowflake")
             print("Generated SQL Query: ", sql_query, "\n")
             if sql_query.strip().lower() != "no relevant documents found!":
-                result = sql_executor.execute_query(sql_query)
+                try:
+                    result = sql_executor.execute_query_with_retry(sql_query, sql_generator, user_id, user_query)
+                except Exception as e:
+                    print(f"❌ Query execution failed after all retries: {e}")
+                    continue
                 # Print DataFrame in a more structured format
                 print("\n" + "="*80)
                 print(" "*30 + "📊 QUERY RESULTS 📊")
